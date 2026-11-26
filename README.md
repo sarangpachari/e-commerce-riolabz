@@ -11,6 +11,17 @@ REST API for a basic e-commerce application, built with Node.js, Express, MongoD
 
 The API is available at `http://localhost:5000/api/v1`. Check it with `GET /health`.
 
+### Docker
+
+With `.env` configured, run `docker compose up --build`. The API is exposed at `http://localhost:5000`.
+
+### Demo data
+
+Run `npm run seed` to create the multi-level Electronics hierarchy, five products, a delivered sample order, and these demo accounts:
+
+- Admin: `admin@ecommerce.test` / `Admin@123`
+- Customer: `customer@ecommerce.test` / `Customer@123`
+
 ## Initial admin user
 
 Registrations always create a `customer`, which prevents public privilege escalation. After registering your own account, promote it once in MongoDB Compass or mongosh:
@@ -34,7 +45,7 @@ Send JWTs as `Authorization: Bearer <token>`.
 | Products | `GET /products`; admin: `POST /products`, `PATCH /products/:id`, `DELETE /products/:id` |
 | Orders | authenticated: `POST /orders`, `GET /orders`; admin: `PATCH /orders/:id/status` |
 
-The OpenAPI specification is available at [`docs/openapi.yaml`](docs/openapi.yaml). Import it into Postman or Swagger Editor to explore the endpoints.
+The OpenAPI specification is available at [`docs/openapi.yaml`](docs/openapi.yaml). The ready-to-import [Postman collection](docs/E-Commerce-Riolabz.postman_collection.json) covers every endpoint.
 
 ### Product listing parameters
 
@@ -75,3 +86,4 @@ Order transitions are enforced: `pending → confirmed → processing → shippe
 - Passwords are hashed with bcrypt. Public registration cannot choose an account role.
 - Order prices are snapshotted server-side and client-provided prices are ignored. Conditional stock decrements prevent overselling during concurrent checkouts; decrements are compensated if order creation fails.
 - Error responses use appropriate 4xx/5xx codes and are handled centrally.
+- API requests are rate limited globally and authentication endpoints have a stricter limit.

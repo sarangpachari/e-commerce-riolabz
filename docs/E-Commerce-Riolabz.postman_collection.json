@@ -1,0 +1,35 @@
+{
+  "info": { "name": "E-Commerce-Riolabz", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json", "description": "Machine-test API collection. Login requests save JWT to the token variable." },
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:5000/api/v1" }, { "key": "token", "value": "" }, { "key": "categoryId", "value": "" }, { "key": "productId", "value": "" }, { "key": "orderId", "value": "" }, { "key": "userId", "value": "" }],
+  "item": [
+    { "name": "Auth", "item": [
+      { "name": "Register customer", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/register", "body": { "mode": "raw", "raw": "{\n  \"name\": \"New Customer\",\n  \"email\": \"new.customer@example.com\",\n  \"password\": \"Customer@123\"\n}" } } },
+      { "name": "Login admin", "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('token', pm.response.json().token);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/login", "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@ecommerce.test\",\n  \"password\": \"Admin@123\"\n}" } } },
+      { "name": "Login customer", "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('token', pm.response.json().token);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/login", "body": { "mode": "raw", "raw": "{\n  \"email\": \"customer@ecommerce.test\",\n  \"password\": \"Customer@123\"\n}" } } },
+      { "name": "My profile", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/auth/me" } }
+    ] },
+    { "name": "Users (Admin)", "item": [
+      { "name": "List users", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/users?page=1&limit=20" } },
+      { "name": "Set user status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/{{userId}}/status", "body": { "mode": "raw", "raw": "{ \"isActive\": true }" } } }
+    ] },
+    { "name": "Categories", "item": [
+      { "name": "List categories", "request": { "method": "GET", "url": "{{baseUrl}}/categories" } },
+      { "name": "Get category tree", "request": { "method": "GET", "url": "{{baseUrl}}/categories/tree" } },
+      { "name": "Create category (Admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/categories", "body": { "mode": "raw", "raw": "{ \"name\": \"Demo Category\", \"parent\": null }" } } },
+      { "name": "Update category (Admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/categories/{{categoryId}}", "body": { "mode": "raw", "raw": "{ \"description\": \"Updated description\" }" } } },
+      { "name": "Delete category (Admin)", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/categories/{{categoryId}}" } }
+    ] },
+    { "name": "Products", "item": [
+      { "name": "Browse products", "request": { "method": "GET", "url": "{{baseUrl}}/products?search=phone&minPrice=10000&maxPrice=90000&sort=price_asc&page=1&limit=10" } },
+      { "name": "Filter by category tree", "request": { "method": "GET", "url": "{{baseUrl}}/products?category={{categoryId}}" } },
+      { "name": "Create product (Admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/products", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Demo Product\",\n  \"sku\": \"DEMO-001\",\n  \"description\": \"Created from Postman\",\n  \"price\": 1999,\n  \"salePrice\": 1799,\n  \"stock\": 10,\n  \"category\": \"{{categoryId}}\",\n  \"status\": \"active\"\n}" } } },
+      { "name": "Update product (Admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/products/{{productId}}", "body": { "mode": "raw", "raw": "{ \"stock\": 25 }" } } },
+      { "name": "Delete product (Admin)", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/products/{{productId}}" } }
+    ] },
+    { "name": "Orders", "item": [
+      { "name": "Create order", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/orders", "body": { "mode": "raw", "raw": "{ \"items\": [{ \"product\": \"{{productId}}\", \"quantity\": 1 }] }" } } },
+      { "name": "List orders", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders?page=1&limit=20" } },
+      { "name": "Update order status (Admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/orders/{{orderId}}/status", "body": { "mode": "raw", "raw": "{ \"status\": \"confirmed\" }" } } }
+    ] }
+  ]
+}
