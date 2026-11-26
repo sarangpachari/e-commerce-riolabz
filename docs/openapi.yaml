@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: E-commerce REST API
+  version: 1.0.0
+  description: JWT protected e-commerce API. Send `Authorization: Bearer <token>` for protected endpoints.
+servers:
+  - url: http://localhost:5000/api/v1
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Category:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        parent: { type: string, nullable: true }
+        isActive: { type: boolean }
+    Product:
+      type: object
+      required: [name, sku, price, stock, category]
+      properties:
+        name: { type: string }
+        sku: { type: string }
+        description: { type: string }
+        price: { type: number }
+        salePrice: { type: number, nullable: true }
+        stock: { type: integer }
+        category: { type: string }
+        status: { type: string, enum: [active, inactive] }
+    OrderInput:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [product, quantity]
+            properties:
+              product: { type: string }
+              quantity: { type: integer, minimum: 1 }
+paths:
+  /auth/register:
+    post:
+      summary: Register a customer
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [name, email, password], properties: { name: { type: string }, email: { type: string, format: email }, password: { type: string, minLength: 6 } } } } } }
+      responses: { '201': { description: Registered }, '409': { description: Email exists } }
+  /auth/login:
+    post:
+      summary: Login
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [email, password], properties: { email: { type: string }, password: { type: string } } } } } }
+      responses: { '200': { description: JWT returned } }
+  /auth/me:
+    get: { summary: Current profile, security: [{ bearerAuth: [] }], responses: { '200': { description: Profile } } }
+  /users:
+    get: { summary: List users (admin), security: [{ bearerAuth: [] }], responses: { '200': { description: Users } } }
+  /users/{id}/status:
+    patch:
+      summary: Activate or deactivate a user (admin)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [isActive], properties: { isActive: { type: boolean } } } } } }
+      responses: { '200': { description: Updated } }
+  /categories:
+    get: { summary: List categories, responses: { '200': { description: Categories } } }
+    post: { summary: Create category (admin), security: [{ bearerAuth: [] }], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }, responses: { '201': { description: Created } } }
+  /categories/tree:
+    get: { summary: Get entire arbitrary-depth category tree, responses: { '200': { description: Tree } } }
+  /categories/{id}:
+    patch: { summary: Update category (admin), security: [{ bearerAuth: [] }], parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: Updated } } }
+    delete: { summary: Delete leaf category (admin), security: [{ bearerAuth: [] }], parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '204': { description: Deleted } } }
+  /products:
+    get:
+      summary: List customer products
+      parameters: [{ name: search, in: query, schema: { type: string } }, { name: category, in: query, schema: { type: string } }, { name: minPrice, in: query, schema: { type: number } }, { name: maxPrice, in: query, schema: { type: number } }, { name: sort, in: query, schema: { type: string, enum: [newest, price_asc, price_desc, name] } }, { name: page, in: query, schema: { type: integer } }, { name: limit, in: query, schema: { type: integer } }]
+      responses: { '200': { description: Products } }
+    post: { summary: Create product (admin), security: [{ bearerAuth: [] }], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Product' } } } }, responses: { '201': { description: Created } } }
+  /products/{id}:
+    patch: { summary: Update product (admin), security: [{ bearerAuth: [] }], parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: Updated } } }
+    delete: { summary: Delete product (admin), security: [{ bearerAuth: [] }], parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '204': { description: Deleted } } }
+  /orders:
+    get: { summary: List own orders; admins see all, security: [{ bearerAuth: [] }], responses: { '200': { description: Orders } } }
+    post: { summary: Place order, security: [{ bearerAuth: [] }], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OrderInput' } } } }, responses: { '201': { description: Created }, '409': { description: Insufficient stock } } }
+  /orders/{id}/status:
+    patch: { summary: Update order status (admin), security: [{ bearerAuth: [] }], parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: Updated } } }

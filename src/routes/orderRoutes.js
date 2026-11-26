@@ -1,0 +1,2 @@
+const router = require('express').Router(); const c = require('../controllers/orderController'); const validate = require('../middleware/validate'); const { protect, authorize } = require('../middleware/auth');
+router.use(protect); router.post('/', c.createValidation, validate, c.create); router.get('/', c.list); router.patch('/:id/status', authorize('admin'), c.statusValidation, validate, c.updateStatus); module.exports = router;
